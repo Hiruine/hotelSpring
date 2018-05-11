@@ -1,0 +1,15 @@
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd"
+                   logicalFilePath="001-initial-schema.xml">
+    <changeSet id="001" author="RaduMadiudin">
+        <sql>
+            create table userTB(
+            username varchar(100) primary key,
+            password varchar(40)
+            )
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
