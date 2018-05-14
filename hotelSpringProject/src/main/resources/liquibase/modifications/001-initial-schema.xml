@@ -5,7 +5,7 @@
                    logicalFilePath="001-initial-schema.xml">
     <changeSet id="001" author="RaduMadiudin">
         <sql>
-            create table userTB(
+            create table user_table(
             username varchar(100) primary key,
             password varchar(40)
             )

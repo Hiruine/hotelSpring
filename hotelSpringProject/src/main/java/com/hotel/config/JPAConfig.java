@@ -1,14 +1,10 @@
 package com.hotel.config;
 
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.config.PropertiesFactoryBean;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.DependsOn;
+import org.springframework.context.annotation.*;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.JpaVendorAdapter;
@@ -17,27 +13,34 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.persistence.EntityManagerFactory;
-import javax.sql.DataSource;
 import java.util.Properties;
 
 @Configuration
 @EnableTransactionManagement
 @ComponentScan("com.hotel")
+@Import(DatasourceConfig.class)
 public class JPAConfig {
 
+    private DatasourceConfig datasourceConfig;
+
+    @Autowired
+    public JPAConfig(DatasourceConfig datasourceConfig) {
+        this.datasourceConfig = datasourceConfig;
+    }
 
     @Bean
     @DependsOn("liquibase")
     public LocalContainerEntityManagerFactoryBean entityManagerFactory(
             @Qualifier("hibernateProperties") Properties hibernateProperties,
-            @Qualifier("datasourceProperties") Properties datasourceProperties
+            @Qualifier("dmlDatasourceProperties") Properties datasourceProperties
             ) {
 
         LocalContainerEntityManagerFactoryBean em
                 = new LocalContainerEntityManagerFactoryBean();
 
         //injecting datasource into it
-        em.setDataSource(dataSource(datasourceProperties));
+        em.setDataSource(datasourceConfig
+                .dmlDataSource(datasourceProperties));
         //packages where our entities will be
         em.setPackagesToScan("com.hotel.model");
 
@@ -49,15 +52,7 @@ public class JPAConfig {
         return em;
     }
 
-    @Bean
-    public DataSource dataSource(
-            Properties datasourceProperties
-    ){
-        HikariConfig config = new HikariConfig(
-                datasourceProperties);
 
-        return new HikariDataSource(config);
-    }
 
 
     //transaction manager, injecting the LocalContainerEntityManagerFactoryBean into it
@@ -81,11 +76,5 @@ public class JPAConfig {
     }
 
 
-    @Bean
-    PropertiesFactoryBean datasourceProperties() {
-        PropertiesFactoryBean properties = new PropertiesFactoryBean();
-        properties.setLocation(new ClassPathResource("datasource.properties"));
 
-        return properties;
-    }
 }

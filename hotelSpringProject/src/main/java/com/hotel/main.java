@@ -1,5 +1,6 @@
 package com.hotel;
 
+import com.hotel.config.DatasourceConfig;
 import com.hotel.config.JPAConfig;
 import com.hotel.config.LiquibaseConfig;
 import com.hotel.model.User;
@@ -14,7 +15,7 @@ public class main {
     public static void main(String[] args) {
         ApplicationContext context =
                 new AnnotationConfigApplicationContext(
-                        JPAConfig.class, LiquibaseConfig.class
+                        DatasourceConfig.class, LiquibaseConfig.class, JPAConfig.class
                 );
 
         UserService userService =
