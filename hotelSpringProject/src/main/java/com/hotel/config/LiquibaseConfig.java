@@ -1,22 +1,18 @@
 package com.hotel.config;
 
-import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import liquibase.integration.spring.SpringLiquibase;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.beans.factory.config.PropertiesFactoryBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
-import java.util.Properties;
 
 @Configuration
-@Import(DatasourceConfig.class)
+@PropertySource("classpath:liquibaseDatasource.properties")
 public class LiquibaseConfig {
 
     @Bean
@@ -29,36 +25,45 @@ public class LiquibaseConfig {
         return liquibase;
     }
 
-    @Bean("liquibase.dataSource")
-    public DataSource dataSource(LiquibaseProperties properties) {
+    @Bean(name = "liquibase.dataSource")
+    public DataSource dataSource(LiquibaseDatasourceProperties properties) {
         HikariDataSource dataSource = new HikariDataSource();
+
         dataSource.setJdbcUrl(properties.getUrl());
+        dataSource.setDriverClassName(properties.getDriver());
         dataSource.setUsername(properties.getUsername());
+        dataSource.setPassword(properties.getPassword());
+
+
         return dataSource;
     }
 
-//    @Bean("liquibase.dataSource.properties")
-//    public PropertiesFactoryBean dataSourceProperties() {
-//        PropertiesFactoryBean properties = new PropertiesFactoryBean();
-//        properties.setLocation(new ClassPathResource("datasource.properties"));
-//
-//        return properties;
-//    }
-//
     @Component
-    static class LiquibaseProperties {
+    static class LiquibaseDatasourceProperties {
 
-        @Value("dataSource.user")
+        @Value("${liquibase.url}")
         private String url;
+        @Value("${liquibase.dataSourceClassName}")
+        private String driver;
+        @Value("${liquibase.username}")
         private String username;
-        private String passwor;
+        @Value("${liquibase.password}")
+        private String password;
 
         public String getUrl() {
             return url;
         }
 
+        public String getDriver() {
+            return driver;
+        }
+
         public String getUsername() {
             return username;
+        }
+
+        public String getPassword() {
+            return password;
         }
     }
 }

@@ -1,8 +1,9 @@
 package com.hotel.config;
 
 
-import org.springframework.beans.factory.annotation.Autowired;
+import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.PropertiesFactoryBean;
 import org.springframework.context.annotation.*;
 import org.springframework.core.io.ClassPathResource;
@@ -10,37 +11,30 @@ import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.JpaVendorAdapter;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.persistence.EntityManagerFactory;
+import javax.sql.DataSource;
 import java.util.Properties;
 
 @Configuration
 @EnableTransactionManagement
 @ComponentScan("com.hotel")
-@Import(DatasourceConfig.class)
-public class JPAConfig {
-
-    private DatasourceConfig datasourceConfig;
-
-    @Autowired
-    public JPAConfig(DatasourceConfig datasourceConfig) {
-        this.datasourceConfig = datasourceConfig;
-    }
+@PropertySource("classpath:jpaDatasource.properties")
+public class JpaConfig {
 
     @Bean
-    @DependsOn("liquibase")
     public LocalContainerEntityManagerFactoryBean entityManagerFactory(
             @Qualifier("hibernateProperties") Properties hibernateProperties,
-            @Qualifier("dmlDatasourceProperties") Properties datasourceProperties
+            @Qualifier("jpa.dataSource") DataSource dataSource
             ) {
 
         LocalContainerEntityManagerFactoryBean em
                 = new LocalContainerEntityManagerFactoryBean();
 
         //injecting datasource into it
-        em.setDataSource(datasourceConfig
-                .dmlDataSource(datasourceProperties));
+        em.setDataSource(dataSource);
         //packages where our entities will be
         em.setPackagesToScan("com.hotel.model");
 
@@ -65,14 +59,57 @@ public class JPAConfig {
         return transactionManager;
     }
 
-
-
     @Bean
     PropertiesFactoryBean hibernateProperties() {
         PropertiesFactoryBean properties = new PropertiesFactoryBean();
         properties.setLocation(new ClassPathResource("hibernate.properties"));
 
         return properties;
+    }
+
+    @Bean("jpa.dataSource")
+    public DataSource dataSource(JpaDatasourceProperties properties) {
+        HikariDataSource dataSource = new HikariDataSource();
+
+        dataSource.setJdbcUrl(properties.getUrl());
+        dataSource.setDriverClassName(properties.getDriver());
+        dataSource.setUsername(properties.getUsername());
+        dataSource.setPassword(properties.getPassword());
+
+
+
+        return dataSource;
+    }
+
+
+    @Component
+    static class JpaDatasourceProperties {
+
+        @Value("${jpa.url}")
+        private String url;
+        @Value("${jpa.dataSourceClassName}")
+        private String driver;
+        @Value("${jpa.username}")
+        private String username;
+        @Value("${jpa.password}")
+        private String password;
+
+        public String getUrl() {
+            return url;
+        }
+
+        public String getDriver() {
+            return driver;
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+
     }
 
 
